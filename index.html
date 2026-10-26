@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <title>Smart EV Charging Allocator</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='style.css') }}"
+    >
+
+</head>
+
+<body>
+
+<div class="container">
+
+    <header>
+
+        <h1>⚡ Smart EV Charging Allocator</h1>
+
+        <p>
+            CSP + Greedy Search + Backtracking + Optimization
+        </p>
+
+    </header>
+
+
+    <!-- EV INPUT -->
+
+    <form method="POST">
+
+        <h2>EV Information</h2>
+
+        <div class="ev-grid">
+
+            {% for i in range(1, 4) %}
+
+            <div class="card">
+
+                <h3>🚗 EV {{ i }}</h3>
+
+                <label>
+                    Current Battery (%)
+                </label>
+
+                <input
+                    type="number"
+                    name="battery{{ i }}"
+                    min="0"
+                    max="99"
+                    value="{% if i == 1 %}20{% elif i == 2 %}40{% else %}15{% endif %}"
+                    required
+                >
+
+
+                <label>
+                    Target Battery (%)
+                </label>
+
+                <input
+                    type="number"
+                    name="target{{ i }}"
+                    min="1"
+                    max="100"
+                    value="{% if i == 1 %}80{% elif i == 2 %}90{% else %}70{% endif %}"
+                    required
+                >
+
+
+                <label>
+                    Arrival Time
+                </label>
+
+                <input
+                    type="time"
+                    name="arrival{{ i }}"
+                    value="{% if i == 1 %}09:00{% elif i == 2 %}09:30{% else %}10:00{% endif %}"
+                    required
+                >
+
+
+                <label>
+                    Departure Time
+                </label>
+
+                <input
+                    type="time"
+                    name="departure{{ i }}"
+                    value="{% if i == 1 %}12:00{% elif i == 2 %}11:30{% else %}13:00{% endif %}"
+                    required
+                >
+
+
+                <label>
+                    Charger Requirement
+                </label>
+
+                <select name="charger{{ i }}">
+
+                    <option value="Fast">
+                        Fast
+                    </option>
+
+                    <option value="Normal">
+                        Normal
+                    </option>
+
+                </select>
+
+            </div>
+
+            {% endfor %}
+
+        </div>
+
+
+        <!-- STATIONS -->
+
+        <h2>Charging Stations</h2>
+
+        <div class="station-grid">
+
+            {% for station in stations %}
+
+            <div class="station-card">
+
+                <div class="station-icon">
+                    ⚡
+                </div>
+
+                <h3>
+                    {{ station.name }}
+                </h3>
+
+                <p>
+                    Type:
+                    <strong>
+                        {{ station.type }}
+                    </strong>
+                </p>
+
+                <p>
+                    Power:
+                    {{ station.power }} kW
+                </p>
+
+                <span class="available">
+                    ● {{ station.status }}
+                </span>
+
+            </div>
+
+            {% endfor %}
+
+        </div>
+
+
+        <button type="submit">
+            RUN AI ALLOCATION
+        </button>
+
+    </form>
+
+
+    <!-- ERROR -->
+
+    {% if error %}
+
+    <div class="error">
+
+        ❌ {{ error }}
+
+    </div>
+
+    {% endif %}
+
+
+    <!-- RESULT -->
+
+    {% if result %}
+
+    <div class="result">
+
+        <h2>
+            AI Allocation Result
+        </h2>
+
+
+        <div class="success">
+
+            ✓ All CSP constraints satisfied
+
+            <br>
+
+            ✓ No charging conflicts
+
+        </div>
+
+
+        <table>
+
+            <tr>
+
+                <th>EV</th>
+                <th>Station</th>
+                <th>Start</th>
+                <th>End</th>
+                <th>Duration</th>
+
+            </tr>
+
+
+            {% for item in result.allocation %}
+
+            <tr>
+
+                <td>
+                    🚗 {{ item.ev }}
+                </td>
+
+                <td>
+                    ⚡ {{ item.station }}
+                </td>
+
+                <td>
+                    {{ "%02d:%02d" |
+                    format(
+                        (item.start // 60) % 24,
+                        item.start % 60
+                    ) }}
+                </td>
+
+                <td>
+                    {{ "%02d:%02d" |
+                    format(
+                        (item.end // 60) % 24,
+                        item.end % 60
+                    ) }}
+                </td>
+
+                <td>
+                    {{ item.charging_time }} min
+                </td>
+
+            </tr>
+
+            {% endfor %}
+
+        </table>
+
+
+        <div class="statistics">
+
+            <div>
+                <h3>
+                    {{ result.waiting }}
+                </h3>
+
+                <p>
+                    Total Waiting Minutes
+                </p>
+            </div>
+
+
+            <div>
+
+                <h3>
+                    ₹{{ "%.2f"|format(result.cost) }}
+                </h3>
+
+                <p>
+                    Estimated Charging Cost
+                </p>
+
+            </div>
+
+
+            <div>
+
+                <h3>
+                    {{ "%.2f"|format(result.score) }}
+                </h3>
+
+                <p>
+                    Optimization Score
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <div class="ai-box">
+
+            <h3>
+                🧠 AI Decision
+            </h3>
+
+            <p>
+                The system first prioritizes EVs using
+                <strong>Greedy Search</strong>.
+                It then uses <strong>CSP constraints</strong>
+                and <strong>Backtracking</strong> to find
+                valid charging allocations.
+            </p>
+
+            <p>
+                Finally, the valid solutions are compared
+                using an <strong>Optimization function</strong>
+                that considers waiting time and charging cost.
+            </p>
+
+        </div>
+
+    </div>
+
+    {% endif %}
+
+</div>
+
+</body>
+
+</html>
