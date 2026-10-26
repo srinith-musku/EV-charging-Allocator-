@@ -1,0 +1,4 @@
+Flask
+itertools
+datetime
+webbrowser
